@@ -25,6 +25,7 @@ int main()
 {
     // setting 6 numbers precision
     std::cout << std::setprecision(6);
+    
     std::vector<std::pair<float, float>> data;
     char opc;
     int opcNum;
@@ -113,6 +114,11 @@ int main()
             // Spline cubico
             std::vector<float> anchuraH;
             std::vector<float> fx;
+            char ajusteOpc;
+
+            do{
+                std::cout<<std::noshowpos;
+                clearscr();
 
             LeerTabla(data);
             clearscr();
@@ -187,7 +193,32 @@ int main()
                         matCoeficientesPtr[i][j] = data[i].second;    
                 }
             }           
-            matCoeficientes.PrintMatrix();
+            
+            std::cout<< std::showpos;
+            for(int i=0; i<data.size()-1; i++){
+                //printf("g%i(x)=%f(x-xi)^3 %f(x-xi)^2 %f(x-xi) %f\t %f <= x <= %f", matCoeficientesPtr[i][0], matCoeficientesPtr[i][1], matCoeficientesPtr[i][2], matCoeficientesPtr[i][3], data[i].first, data[i+1].first);
+                std::cout<<"g"<<i<<"(x)="<<matCoeficientesPtr[i][0]<<"(x-xi)^3 "<<matCoeficientesPtr[i][1]<<"(x-xi)^2 "<<matCoeficientesPtr[i][2]<<"(x-xi) "<<matCoeficientesPtr[i][3]<<std::endl;
+                std::cout<<data[i].first<<" <= x <= "<<data[i+1].first<<"\n"<<std::endl;
+            }
+            // int grado = 3;
+            // for(int i=0; i<matCoeficientes.GetRows(); i++){
+            //     std::cout<<"g"<<i<<"(x)=";
+            //     for(int j=0; j<matCoeficientes.GetColumns(); j++){
+            //         if(grado>1)
+            //             std::cout<<matCoeficientesPtr[i][j]<<"(x-xi)^"<<grado;
+            //         else
+            //             std::cout<<matCoeficientesPtr[i][j]<<std::endl;
+                    
+            //         --grado;
+            //     }
+            //     grado = 3;
+            // }
+            data.clear();
+            anchuraH.clear();
+            fx.clear();
+            std::cout<<"¿Desea realizar otro ajuste con otra tabla? (s/n): ";
+            std::cin>>ajusteOpc;
+            }while(ajusteOpc == 's');
         }
             break;
         case 3:
