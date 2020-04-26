@@ -73,7 +73,6 @@ float Matrix::Determinant(const Matrix& mat){
 float Matrix::Cofactor(const Matrix& mat, int m, int n){
     int k = 0, l = 0;
     Matrix cofMat(mat.m_rows-1, mat.m_cols-1);
-    cofMat.CreateMatrix();
     float** subMat = cofMat.GetMatrixPtr();
 
     for(int i = 0; i < mat.m_rows; ++i){
@@ -100,7 +99,6 @@ float Matrix::Cofactor(const Matrix& mat, int m, int n){
 
 Matrix Matrix::Inverse(const Matrix& mat){
     Matrix inv(mat.m_rows, mat.m_cols);
-    inv.CreateMatrix();
     float** invPtr = inv.GetMatrixPtr();
     for(int i=0; i<mat.m_rows; ++i){
         for(int j=0; j < mat.m_cols; ++j){
@@ -112,7 +110,6 @@ Matrix Matrix::Inverse(const Matrix& mat){
     float** matInvTrnPtr = matInvTrn.GetMatrixPtr();
 
    Matrix invComplete(mat.m_rows, mat.m_cols);
-    invComplete.CreateMatrix();
     float** invCompletePtr = invComplete.GetMatrixPtr(); 
 
     float detMat= 1/Matrix::Determinant(mat);
@@ -127,7 +124,6 @@ Matrix Matrix::Inverse(const Matrix& mat){
 
 Matrix Matrix::Transpose(const Matrix& mat){
     Matrix trnMat(mat.m_rows, mat.m_cols);
-    trnMat.CreateMatrix();
     float** trnPtr = trnMat.GetMatrixPtr();
     
     for(int i=0; i<mat.m_rows; ++i)
@@ -141,7 +137,6 @@ Matrix Matrix::Transpose(const Matrix& mat){
 Matrix Matrix::Mult(const Matrix& matA, const Matrix& matB){
 
     Matrix multMat(matA.m_rows, matB.m_cols);
-    multMat.CreateMatrix();
     float** multPtr = multMat.GetMatrixPtr();
 
     for(int i=0; i<matA.m_rows; ++i){
@@ -158,7 +153,6 @@ Matrix Matrix::Mult(const Matrix& matA, const Matrix& matB){
 
 Matrix Matrix::Add(const Matrix& matA, const Matrix& matB){
     Matrix addMat(matA.m_rows, matB.m_cols);
-    addMat.CreateMatrix();
     float** addPtr = addMat.GetMatrixPtr();
 
     for(int i=0; i<matA.m_rows; ++i)
@@ -170,7 +164,6 @@ Matrix Matrix::Add(const Matrix& matA, const Matrix& matB){
 
 Matrix Matrix::Subtract(const Matrix& matA, const Matrix& matB){
     Matrix subMat(matA.m_rows, matB.m_cols);
-    subMat.CreateMatrix();
     float** subPtr = subMat.GetMatrixPtr();
 
     for(int i=0; i<matA.m_rows; ++i)
