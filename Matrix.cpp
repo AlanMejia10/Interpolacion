@@ -1,179 +1,228 @@
 #include <iostream>
-#include <cmath>
 #include "Matrix.h"
 
 Matrix::Matrix(int m, int n) : m_rows(m), m_cols(n) {
-    CreateMatrix();
+	CreateMatrix();
 }
 
-Matrix::Matrix(const Matrix& mat){
-    std::cout<<"copy ctr called"<<std::endl;
-    std::cout<<"copy ctr called"<<std::endl;
-    if(this == &mat) return;
-    else{
-    this->m_rows = mat.m_rows;
-    this->m_cols = mat.m_cols;
-    
+Matrix::Matrix(const Matrix& other) : m_rows(other.m_rows), m_cols(other.m_cols) {
+    /* Assigning dynamic memory */
+	m_matrix = new float*[m_rows];
 
-    for(int i =0; i<this->m_rows; ++i)
-        for(int j =0; j<this->m_cols; ++j)
-            this->m_matrix[i][j] = mat.m_matrix[i][j];
-    }
+	for(int i = 0; i < m_rows; i++)
+		m_matrix[i] = new float[m_cols];
+
+	/* Copying all the values */
+	for(int i=0; i<m_rows; i++)
+		for(int j=0; j<m_cols; j++)
+			m_matrix[i][j] = other.m_matrix[i][j];
 }
 
-Matrix::~Matrix(){
-    for(int i = 0; i < m_rows; ++i)
-        delete[] m_matrix[i];
+Matrix::~Matrix() {
+	for(int i = 0; i < m_rows; ++i)
+		delete[] m_matrix[i];
 
-    delete[] m_matrix;
+	delete[] m_matrix;
 }
 
-float** Matrix::GetMatrixPtr()const { return m_matrix; }
-
-int Matrix::GetRows()const { return m_rows; }
-
-int Matrix::GetColumns()const{ return m_cols; }
-
-void Matrix::Init(){
-    FillMatrix();
+float** Matrix::GetMatrixPtr()const {
+	return m_matrix;
 }
 
-void Matrix::CreateMatrix(){
-    m_matrix = new float*[m_rows];
-
-    for(int i = 0; i < m_rows; i++)
-        m_matrix[i] = new float[m_cols];
+int Matrix::GetRows()const {
+	return m_rows;
 }
 
-void Matrix::FillMatrix(){
-    for(int i = 0; i < m_rows; ++i)
-        for(int j = 0; j < m_cols; ++j){
-            std::cout<<"matrix["<<i+1<<"]["<<j+1<<"]: ";
-            std::cin>>m_matrix[i][j];
-    }
+int Matrix::GetColumns()const {
+	return m_cols;
 }
 
-void Matrix::PrintMatrix(){
-    for(int i = 0; i < m_rows; ++i){
-        for(int j = 0; j < m_cols; ++j)
-            std::cout<<m_matrix[i][j]<<"\t  ";
+std::ostream& operator<<(std::ostream& out, const Matrix& mat) {
+	for(int i = 0; i < mat.m_rows; ++i) {
+		for(int j = 0; j < mat.m_cols; ++j)
+			out<<mat.m_matrix[i][j]<<"\t  ";
 
-        std::cout<<std::endl;
-    }
+		out<<"\n";
+	}
+	return out;
 }
 
-float Matrix::Determinant(const Matrix& mat){
-    float det=0;
-     for(int j = 0; j < mat.m_cols; ++j)
-     det += ((0+j) % 2 == 0 ? 1 : -1) * mat.m_matrix[0][j] * Cofactor(mat, 0, j);
-    
-    return det;
+std::istream& operator>>(std::istream& in, Matrix& mat) {
+	for(int i = 0; i < mat.m_rows; ++i)
+		for(int j = 0; j < mat.m_cols; ++j) {
+			std::cout<<"matrix["<<i+1<<"]["<<j+1<<"]: ";
+			in>>mat.m_matrix[i][j];
+		}
+	return in;
 }
 
-float Matrix::Cofactor(const Matrix& mat, int m, int n){
-    int k = 0, l = 0;
-    Matrix cofMat(mat.m_rows-1, mat.m_cols-1);
-    float** subMat = cofMat.GetMatrixPtr();
-
-    for(int i = 0; i < mat.m_rows; ++i){
-        for(int j = 0; j < mat.m_cols; ++j){
-            if(i != m && j != n){
-                if(l < cofMat.m_cols){
-                    subMat[k][l] = mat.m_matrix[i][j];
-                    ++l;
-                }else{
-                    ++k;
-                    l=0;
-                    subMat[k][l] = mat.m_matrix[i][j];
-                    ++l;
-                }
-            }
-        }
-    }
-
-    if(cofMat.m_rows == 1)
-        return subMat[0][0];
-    else
-        Determinant(cofMat);
+Matrix operator*(float scalar, Matrix& mat){
+    return mat * scalar;
 }
 
-Matrix Matrix::Inverse(const Matrix& mat){
-    Matrix inv(mat.m_rows, mat.m_cols);
-    float** invPtr = inv.GetMatrixPtr();
-    for(int i=0; i<mat.m_rows; ++i){
-        for(int j=0; j < mat.m_cols; ++j){
-            invPtr[i][j] = ((i+j) % 2 == 0 ? 1 : -1) * Cofactor(mat, i, j);
-        }
-    }
+const Matrix& Matrix::operator=(const Matrix& other) {
+    // self-assignment check
+	if(&other != this) {
+        /* Assigning new values */
+		if(m_rows == other.m_rows && m_cols == other.m_cols) {
+			for(int i=0; i<m_rows; i++)
+				for(int j=0; j<m_cols; j++)
+					m_matrix[i][j] = other.m_matrix[i][j];
+		} else {
+			/* Resizing the matrix and assigning new values */
+			for(int i = 0; i < m_rows; ++i)
+				delete[] m_matrix[i];
 
-    Matrix matInvTrn = Matrix::Transpose(inv);
-    float** matInvTrnPtr = matInvTrn.GetMatrixPtr();
+			delete[] m_matrix;
 
-   Matrix invComplete(mat.m_rows, mat.m_cols);
-    float** invCompletePtr = invComplete.GetMatrixPtr(); 
+			m_rows = other.m_rows;
+			m_cols = other.m_cols;
+			CreateMatrix();
 
-    float detMat= 1/Matrix::Determinant(mat);
+			for(int i=0; i<m_rows; i++)
+				for(int j=0; j<m_cols; j++)
+					m_matrix[i][j] = other.m_matrix[i][j];
+		}
+	}
+	return *this;
+}
 
-    for(int i=0; i<mat.m_rows; ++i)
-        for(int j =0; j<mat.m_cols; ++j)
-            invCompletePtr[i][j] = detMat * matInvTrnPtr[i][j];
-            
-    return invComplete;
+Matrix Matrix::operator+(const Matrix& other){
+    //if(other.m_rows == m_rows && other.m_cols == m_cols){
+    Matrix additionMat(m_rows, m_cols);
+    float** additionMatPtr = additionMat.GetMatrixPtr();
+
+    for(int i=0; i<additionMat.m_rows; ++i)
+		for(int j=0; j<additionMat.m_cols; ++j)
+			additionMatPtr[i][j]= m_matrix[i][j] + other.m_matrix[i][j];
+
+    return additionMat;
+    //}
+}
+
+Matrix Matrix::operator*(float scalar){
+    Matrix scalarMult(m_rows, m_cols);
+    float** scalarMultPtr = scalarMult.GetMatrixPtr();
+
+    for(int i=0; i<scalarMult.m_rows; i++)
+        for(int j=0; j<scalarMult.m_cols; j++)
+            scalarMultPtr[i][j] = scalar * m_matrix[i][j];
+
+    return scalarMult;
+}
+
+Matrix Matrix::operator-(const Matrix& other){
+    Matrix substractMat(m_rows, m_cols);
+    float** substractMatPtr = substractMat.GetMatrixPtr();
+
+    for(int i=0; i<substractMat.m_rows; ++i)
+		for(int j=0; j<substractMat.m_cols; ++j)
+			substractMatPtr[i][j]= m_matrix[i][j] - other.m_matrix[i][j];
+
+    return substractMat;
+}
+
+float Matrix::Determinant(const Matrix& mat) {
+	float det=0;
+	for(int j = 0; j < mat.m_cols; ++j)
+		det += ((0+j) % 2 == 0 ? 1 : -1) * mat.m_matrix[0][j] * Minor(mat, 0, j); // solving with minors and cofactors
+
+	return det;
+}
+
+float Matrix::Minor(const Matrix& mat, int m, int n) {
+	int k = 0, l = 0;
+	Matrix minorDet(mat.m_rows-1, mat.m_cols-1);
+	float** minorDetPtr = minorDet.GetMatrixPtr();
+
+    /* the algorithm finds the minor at m, n and solves it */
+	for(int i = 0; i < mat.m_rows; ++i) {
+		for(int j = 0; j < mat.m_cols; ++j) {
+			if(i != m && j != n) {
+				if(l < minorDet.m_cols) {
+					minorDetPtr[k][l] = mat.m_matrix[i][j];
+					++l;
+				} else {
+					++k; l=0;
+					minorDetPtr[k][l] = mat.m_matrix[i][j];
+					++l;
+				}
+			}
+		}
+	}
+
+	if(minorDet.m_rows == 1)
+		return minorDetPtr[0][0];
+	else
+		return Determinant(minorDet);
+}
+
+Matrix Matrix::Inverse(const Matrix& mat) {
+
+    /* finds the inverse using the adjugate matrix  A^-1 = (1/det(matA)) * adj(matA)
+        Note: the adjugate matrix is the transpose of the cofactor matrix*/
+
+	Matrix cofactorMat(mat.m_rows, mat.m_cols);
+	float** cofactorMatPtr = cofactorMat.GetMatrixPtr();
+
+	for(int i=0; i<cofactorMat.m_rows; ++i)
+		for(int j=0; j < cofactorMat.m_cols; ++j)
+			cofactorMatPtr[i][j] = ((i+j) % 2 == 0 ? 1 : -1) * Minor(mat, i, j);
+
+	Matrix adjugateMat = Matrix::Transpose(cofactorMat);
+	//float** adjugateMatPtr = adjugateMat.GetMatrixPtr();
+
+	float detMat= 1/Matrix::Determinant(mat);
+
+	Matrix inverseMat = detMat * adjugateMat;
+	//float** inverseMatPtr = inverseMat.GetMatrixPtr();
+
+
+//	for(int i=0; i<inverseMat.m_rows; ++i)
+//		for(int j =0; j<inverseMat.m_cols; ++j)
+//			inverseMatPtr[i][j] = detMat * adjugateMatPtr[i][j];
+
+	return inverseMat;
 
 }
 
-Matrix Matrix::Transpose(const Matrix& mat){
-    Matrix trnMat(mat.m_rows, mat.m_cols);
-    float** trnPtr = trnMat.GetMatrixPtr();
-    
-    for(int i=0; i<mat.m_rows; ++i)
-        for(int j=0; j<mat.m_cols; j++)
-            trnPtr[i][j] = mat.m_matrix[j][i];
+Matrix Matrix::Transpose(const Matrix& mat) {
+	Matrix trnMat(mat.m_rows, mat.m_cols);
+	float** trnMatPtr = trnMat.GetMatrixPtr();
 
-    return trnMat;
-        
+	for(int i=0; i<trnMat.m_rows; ++i)
+		for(int j=0; j<trnMat.m_cols; j++)
+			trnMatPtr[i][j] = mat.m_matrix[j][i];
+
+	return trnMat;
+
 }
 
-Matrix Matrix::Mult(const Matrix& matA, const Matrix& matB){
+Matrix Matrix::Mult(const Matrix& matA, const Matrix& matB) {
 
-    Matrix multMat(matA.m_rows, matB.m_cols);
-    float** multPtr = multMat.GetMatrixPtr();
+	Matrix multMat(matA.m_rows, matB.m_cols);
+	float** multPtr = multMat.GetMatrixPtr();
 
-    for(int i=0; i<matA.m_rows; ++i){
-        for(int j=0; j<matB.m_cols; ++j){
-            multPtr[i][j]=0;
-            for(int k=0;k < matA.m_cols; ++k){
+	for(int i=0; i<matA.m_rows; ++i) {
+		for(int j=0; j<matB.m_cols; ++j) {
+			multPtr[i][j]=0;
+			for(int k=0; k < matA.m_cols; ++k) {
 				multPtr[i][j]=multPtr[i][j] + matA.m_matrix[i][k]*matB.m_matrix[k][j];
 			}
-        }
-    }
+		}
+	}
 
-    return multMat;
+	return multMat;
 }
 
-Matrix Matrix::Add(const Matrix& matA, const Matrix& matB){
-    Matrix addMat(matA.m_rows, matB.m_cols);
-    float** addPtr = addMat.GetMatrixPtr();
+void Matrix::CreateMatrix() {
+	m_matrix = new float*[m_rows];
 
-    for(int i=0; i<matA.m_rows; ++i)
-        for(int j=0; j<matA.m_cols; ++j)
-            addPtr[i][j]= matA.m_matrix[i][j] + matB.m_matrix[i][j];
+	for(int i = 0; i < m_rows; i++)
+		m_matrix[i] = new float[m_cols];
 
-    return addMat;
+	/* initializing matrix to 0 */
+	for(int i=0; i<m_rows; i++)
+		for(int j=0; j<m_cols; j++)
+			m_matrix[i][j] = 0;
 }
-
-Matrix Matrix::Subtract(const Matrix& matA, const Matrix& matB){
-    Matrix subMat(matA.m_rows, matB.m_cols);
-    float** subPtr = subMat.GetMatrixPtr();
-
-    for(int i=0; i<matA.m_rows; ++i)
-        for(int j=0; j<matA.m_cols; ++j)
-            subPtr[i][j]= matA.m_matrix[i][j] - matB.m_matrix[i][j];
-
-    return subMat;
-}
-
-
-
-
-
