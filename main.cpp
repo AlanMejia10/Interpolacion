@@ -7,11 +7,14 @@
 #include "Matrix.h"
 #include "NewtonRaphson.h"
 
+#define EPSILON 0.0001
+
 void Portada();
 void clearScreen();
 
 void Menu();
 void MenuInterpolacion();
+void MenuDiferenciacionIntegracion();
 
 bool OrdernarPorValor(const std::pair<float, float> &a, const std::pair<float, float> &b) {
 	return (a.first < b.first);
@@ -26,10 +29,16 @@ void SortData();
 bool EstaEnRango(float numInterpolar);
 void InterpolacionDiferenciasDivididas(float numInterpolar, int grado);
 
+void LeerTablaDiferenciacionIntegracion();
+int posicionIntervalo(float intervalo);
+
 void Newton();
 void MetodosInterpolacion();
+void MetodosDiferenciacionIntegracion();
 void Diferencias();
 void SplineCubico();
+void Diferenciacion();
+void Integracion();
 
 std::vector<std::pair<float, float>> data;
 
@@ -55,24 +64,25 @@ int main() {
 			MetodosInterpolacion();
 			break;
 		case 3:
+			MetodosDiferenciacionIntegracion();
 			break;
 		default:
 			std::cout<<"Opcion incorrecta"<<std::endl;
 		}
-		std::cout<<"¿Te gustaria resolver otro sistema? (s/n)";
+		std::cout<<"Te gustaria ver el menu principal? (s/n): ";
 		std::cin>>decision;
 	} while(decision == 's');
 	return 0;
 }
 
 void Portada() {
-	std::cout << "Metodos Numericos II \n"
-	          << "Paquete de programas\n"
-	          << "Profesora: Carrillo Ramirez Teresa\n"
-	          << "Integrantes:\n"
-	          << "Diaz Lopez Alan Fernando\n"
-	          << "Mejia Espinosa Ruben Alan\n"
-	          << "Grupo: 2401" << std::endl;
+	std::cout << "\n\n\t\tMetodos Numericos II \n"
+	          << "\tPaquete de programas\n"
+	          << "\tProfesora: Carrillo Ramirez Teresa\n"
+	          << "\tIntegrantes:\n"
+	          << "\t  Diaz Lopez Alan Fernando\n"
+	          << "\t  Mejia Espinosa Ruben Alan\n"
+	          << "\tGrupo: 2401" << std::endl;
 }
 
 void clearScreen() {
@@ -94,58 +104,86 @@ void Menu() {
 
 void Newton() {
 	int opc;
-	clearScreen();
-	NewtonRaphson::Menu();
-	std::cout<<"Selecciona una opcion: ";
-	std::cin>>opc;
+	char respuesta;
+	do {
+		clearScreen();
+		NewtonRaphson::Menu();
+		std::cout<<"Selecciona una opcion: ";
+		std::cin>>opc;
 
-	switch(opc) {
-	case 1:
-		NewtonRaphson::SistemaEcuaciones1();
-		break;
-	case 2:
-		NewtonRaphson::SistemaEcuaciones2();
-		break;
-	case 3:
-		NewtonRaphson::SistemaEcuaciones3();
-		break;
-	case 4:
-		NewtonRaphson::SistemaEcuaciones4();
-		break;
-	default:
-		std::cout<<"Opcion incorrecta"<<std::endl;
-		break;
-	}
+		switch(opc) {
+		case 1:
+			NewtonRaphson::SistemaEcuaciones1();
+			break;
+		case 2:
+			NewtonRaphson::SistemaEcuaciones2();
+			break;
+		case 3:
+			NewtonRaphson::SistemaEcuaciones3();
+			break;
+		case 4:
+			NewtonRaphson::SistemaEcuaciones4();
+			break;
+		default:
+			std::cout<<"Opcion incorrecta"<<std::endl;
+			break;
+		}
+		std::cout<<"Te gustaria resolver otro sistema de de ecuaciones? (s/n): ";
+		std::cin>>respuesta;
+	} while(respuesta == 's');
 }
 
 void MetodosInterpolacion() {
 	int opc;
-	clearScreen();
-	MenuInterpolacion();
-	std::cout<<"Selecciona una opcion: ";
-	std::cin>>opc;
+	char respuesta;
+	do {
+		clearScreen();
+		MenuInterpolacion();
+		std::cout<<"Selecciona una opcion: ";
+		std::cin>>opc;
 
-	switch(opc) {
-	case 1:
-		Diferencias();
-		break;
-	case 2:
-		SplineCubico();
-		break;
-	default:
-		std::cout<<"Opcion incorrecta"<<std::endl;
-		break;
-	}
+		switch(opc) {
+		case 1:
+			Diferencias();
+			break;
+		case 2:
+			SplineCubico();
+			break;
+		default:
+			std::cout<<"Opcion incorrecta"<<std::endl;
+			break;
+		}
+		std::cout<<"Te gustaria regresar al menu de interpolacion? (s/n): ";
+		std::cin>>respuesta;
+	} while(respuesta == 's');
+
 }
 
 void Diferencias() {
 	char opc;
 	float numInterpolar;
 	int grado, elementoPosicion;
+
+	if(!data.empty()) {
+		ImprimirTabla();
+		std::cout<<"Te gustaria usar la ultima tabla ingresada? (s/n): ";
+		std::cin>>opc;
+
+		if(opc != 's') {
+			data.clear();
+			clearScreen();
+			SetupTable();
+		}
+	}
+
 	do {
-		SetupTable();
+		clearScreen();
+		if(data.empty())
+			SetupTable();
 		do {
+			clearScreen();
 			SortData();
+			ImprimirTabla();
 			std::cout << "Ingresa el punto a interpolar: ";
 			std::cin >> numInterpolar;
 			if (EstaEnRango(numInterpolar)) {
@@ -168,9 +206,14 @@ void Diferencias() {
 			std::cout << "Deseas interpolar otro punto con la misma tabla? (s/n): ";
 			std::cin >> opc;
 		} while (opc == 's');
-		data.clear();
+		//data.clear();
 		std::cout << "Te gustaria cambiar la tabla? (s/n): ";
 		std::cin >> opc;
+		if(opc == 's') {
+			clearScreen();
+			data.clear();
+			SetupTable();
+		}
 	} while (opc == 's');
 }
 
@@ -179,9 +222,29 @@ void SplineCubico() {
 	std::vector<float> fx;
 	char ajusteOpc;
 
+	clearScreen();
+
+	if(!data.empty()) {
+		ImprimirTabla();
+		std::cout<<"Te gustaria usar la ultima tabla ingresada? (s/n): ";
+		std::cin>>ajusteOpc;
+
+		if(ajusteOpc != 's') {
+			data.clear();
+			anchuraH.clear();
+			fx.clear();
+
+			clearScreen();
+			SetupTable();
+		}
+	}
+
 	do {
-		clearScreen();
-		SetupTable();
+
+		if(data.empty()) {
+			clearScreen();
+			SetupTable();
+		}
 		SortData();
 
 		Matrix matCoeficientes = Spline(anchuraH, fx);
@@ -193,11 +256,20 @@ void SplineCubico() {
 			std::cout << std::noshowpos;
 		}
 
-		data.clear();
-		anchuraH.clear();
-		fx.clear();
+//        data.clear();
+//		anchuraH.clear();
+//		fx.clear();
 		std::cout << "¿Desea realizar otro ajuste con otra tabla? (s/n): ";
 		std::cin >> ajusteOpc;
+
+		if(ajusteOpc == 's') {
+			clearScreen();
+			data.clear();
+			anchuraH.clear();
+			fx.clear();
+			SetupTable();
+		}
+
 	} while (ajusteOpc == 's');
 }
 
@@ -362,6 +434,116 @@ Matrix Spline(std::vector<float>& anchuraH, std::vector<float>& fx) {
 void MenuInterpolacion() {
 	std::cout<<"Metodos de interpolacion\n"
 	         << "1) Interpolacion por diferencias divididas\n"
-	         << "2) Ajuste de curvas (Spline cubico)\n"
-	         << "Ingresa la opcion deseada: " << std::endl;
+	         << "2) Ajuste de curvas (Spline cubico)\n";
+}
+
+void MenuDiferenciacionIntegracion() {
+	std::cout<<"Metodos de diferenciacion e integracion\n"
+	         << "1) Metodo de diferenciacion (Diferencias centradas)\n"
+	         << "2) Metodo de integracion (Reglas de simpson)\n";
+}
+
+void MetodosDiferenciacionIntegracion() {
+	int opc;
+	clearScreen();
+	MenuDiferenciacionIntegracion();
+	std::cout<<"Selecciona una opcion: ";
+	std::cin>>opc;
+
+	switch(opc) {
+	case 1:
+		Diferenciacion();
+		break;
+	case 2:
+		Integracion();
+		break;
+	default:
+		std::cout<<"Opcion Incorrecta"<<std::endl;
+		break;
+	}
+}
+
+void Diferenciacion() {
+    char opc;
+    float hStep;
+    float intervaloInf, intervaloSup;
+    std::vector<float> derivadas;
+
+	clearScreen();
+	std::cout<<"Metodo de diferenciacion (Diferencias centradas)"<<std::endl;
+
+    if(!data.empty()) {
+		ImprimirTabla();
+		std::cout<<"Te gustaria usar la ultima tabla ingresada? (s/n): ";
+		std::cin>>opc;
+
+		if(opc != 's') {
+			data.clear();
+			clearScreen();
+			LeerTablaDiferenciacionIntegracion();
+		}
+	}
+
+	// do statement
+	clearScreen();
+	if(data.empty()) {
+		LeerTablaDiferenciacionIntegracion();
+	}
+
+	std::cout<<"Ingresa el valor del intervalo inferior: ";
+	std::cin>>intervaloInf;
+	std::cout<<"Ingresa el valor del intervalo superior: ";
+	std::cin>>intervaloSup;
+    ImprimirTabla();
+	int indexInf = posicionIntervalo(intervaloInf);
+	int indexSup = posicionIntervalo(intervaloSup);
+
+	if((indexInf < 0 || indexSup < 0) || (intervaloInf > intervaloSup) || (abs(indexSup-indexInf) < 1)){
+        std::cout<<"intervalo fuera de rango"<<std::endl;
+        return;
+	}
+
+	hStep = data[1].first - data[0].first;
+    for(int i=indexInf+1; i<indexSup; i++){
+        float derivada = ((1/(2*hStep)) * (data[i+1].second - data[i-1].second));
+        derivadas.push_back(derivada);
+    }
+
+    std::cout<<"x \t f'(x)"<<std::endl;
+    for(int i=0; i<derivadas.size(); i++){
+        std::cout<<data[indexInf + i +1].first<<"\t "<<derivadas[i]<<std::endl;
+    }
+
+}
+
+void Integracion() {
+
+}
+
+void LeerTablaDiferenciacionIntegracion(){
+    float fx, x0, hStep;
+    int numDatos;
+
+	std::cout<<"Ingresa el numero de datos: ";
+	std::cin>>numDatos;
+	std::cout<<"Ingresa el valor incial x0: ";
+	std::cin>>x0;
+	std::cout<<"Ingresa el valor de paso h: ";
+	std::cin>>hStep;
+
+    for (int i = 0; i < numDatos; ++i) {
+		std::cout<<"x"<<i<<": "<<x0<<std::endl;
+		std::cout<<"Ingresa el valor para f"<<i<<": ";
+		std::cin>>fx;
+		data.push_back(std::make_pair(x0, fx));
+		x0 += hStep;
+	}
+}
+
+int posicionIntervalo(float intervalo){
+    for(int i=0; i<data.size(); i++)
+        if(fabs(intervalo - data[i].first) <= EPSILON)
+            return i;
+
+        return -1;
 }
